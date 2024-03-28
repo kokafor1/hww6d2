@@ -42,10 +42,10 @@ def create_task():
         "title": data['title'],
         "description": data['description'],
         "completed": False,
-        "createdAt": datetime.utcnow(),
-        "dueDate": data.get('dueDate')
+        "dateCreated": data.get('date_created')
     }
 
     tasks_list.append(new_task)
 
     return data
+
