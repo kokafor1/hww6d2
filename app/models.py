@@ -25,3 +25,11 @@ class Task(db.Model):
         db.session.add(self)
         db.session.commit()
     
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'completed': self.completed,
+            'dateCreated': self.date_created
+        }

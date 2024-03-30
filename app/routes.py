@@ -1,26 +1,37 @@
 from flask import request
-from . import app
+from . import app, db
+from .models import Task
 from datetime import datetime
 from hw_data.tasks import tasks_list
 
 @app.route('/tasks')
 def get_tasks():
-    # Get the posts from storage (fake data -> tomorrow will be db)
-    tasks = tasks_list
-    return tasks
+    if not request.is_json:
+        return {'error': 'Your content-type must be a json'}, 400
+    data = request.json
+    required_fields = ['title', 'description']
+    missing_fields = []
+    for field in required_fields:
+        if field not in data:
+            missing_fields.append(field)
+    if missing_fields:
+        return {'error': f"{', '.join(missing_fields)} must be in the request body"}, 400
+    
+    title = data.get('title')
+    description = data.get('description')
+
+    new_task = Task(title = title, description = description)
+
+    return new_task.to_dict(), 201
+
 
 @app.route('/tasks/<int:task_id>')
 def get_task(task_id):
-    # Get the posts from storage
-    tasks = tasks_list
-    # For each dictionary in the list of post dictionaries
-    for task in tasks:
-        # If the key of 'id' matches the post_id from the URL
-        if task['id'] == task_id:
-            # Return that post dictionary
-            return task
-    # If we loop through all of the posts without returning, the post with that ID does not exist
-    return {'error': f"Post with an ID of {task_id} does not exist"}, 404
+    task = db.session.get(Task, task_id)
+    if task:
+        return task.to_dict()
+    else:
+        return {'error': f'Task with and ID of {task_id} does not exist'}, 404
 
 @app.route('/tasks', methods=['POST'])
 def create_task():
@@ -33,7 +44,7 @@ def create_task():
         if field not in data:
             missing_fields.append(field)
     if missing_fields:
-        return {'error': f"{', '.join(missing_fields)}must be in the body"},400
+        return {'error': f"{', '.join(missing_fields)}must be in the description"},400
     title = data['title']
     description = data['description']
 
