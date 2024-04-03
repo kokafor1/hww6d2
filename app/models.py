@@ -43,13 +43,17 @@ class Task(db.Model):
                 setattr(self, key, value)
         self.save()
 
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, nullable=False, unique=True)
     email = db.Column(db.String, nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
     date_created = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
-    task = db.relationship('Task', back_populates='author')
+    tasks = db.relationship('Task', back_populates='author')
     token = db.Column(db.String, index=True, unique=True)
     token_expiration = db.Column(db.DateTime(timezone=True))
 
@@ -88,3 +92,7 @@ class User(db.Model):
         self.token_expiration = now + timedelta(hours=1)
         self.save()
         return {"token": self.token, "tokenExpiration": self.token_expiration}
+    
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()

@@ -16,6 +16,7 @@ def get_task(task_id):
         return {'error': f'Task with and ID of {task_id} does not exist'}, 404
 
 @app.route('/tasks', methods=['POST'])
+@token_auth.login_required
 def create_task():
     if not request.is_json:
         return {'error': 'Youre not doing it right'},400
@@ -87,6 +88,10 @@ def edit_task(task_id):
     current_user = token_auth.current_user()
     if current_user is not task.author:
         return {'error': "This is not your post. You do not have permission to edit"}, 403
+    task.title = data.get('title', task.title)
+    task.description = data.get('description', task.description)
+    task.completed = data.get('completed', task.completed)
+    db.session.commit()
     
     data = request.json
     task.update(**data)
@@ -94,13 +99,10 @@ def edit_task(task_id):
 
 @app.route('/tasks/<int:task_id>', methods=['DELETE'])
 @token_auth.login_required
-def delete_task(task_id, user_id):
+def delete_task(task_id):
     task = db.session.get(Task, task_id)
     if task is None:
         return {'error': f"Post {task_id} does not exist"}, 404
-    user = db.session.get(User, user_id )
-    if task.user_id != user.id:
-        return {'error' : f"Task #{task_id} is not associated with task #{user_id}"}, 403
     current_user = token_auth.current_user()
     if task.user != current_user:
         return {'error': 'You do not have permission to delete this comment'}, 403
@@ -113,3 +115,11 @@ def delete_user(user_id):
     user = db.session.get(User, user_id)
     user.delete()
     return {'success': 'User has been deleted'}, 200
+
+@app.route('/users/<int:user_id>')
+def get_user(user_id):
+    user = db.session.get(User, user_id)
+    if user:
+        return user.to_dict()
+    else:
+        return {'error': f"User with an ID of {user_id} does not exist"}, 404
