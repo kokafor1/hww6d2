@@ -104,13 +104,13 @@ def delete_task(task_id):
     if task is None:
         return {'error': f"Post {task_id} does not exist"}, 404
     current_user = token_auth.current_user()
-    if task.user != current_user:
+    if task.author != current_user:
         return {'error': 'You do not have permission to delete this comment'}, 403
     task.delete()
     return {'success': "Task has been successfully deleted"}, 200
 
 @app.route('/users/<int:user_id>', methods=['DElETE'])
-@basic_auth.login_required
+@token_auth.login_required
 def delete_user(user_id):
     user = db.session.get(User, user_id)
     user.delete()
